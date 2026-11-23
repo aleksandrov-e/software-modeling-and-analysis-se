@@ -1,0 +1,90 @@
+// =====================================================================
+// eBay курсова работа (ф.н. 2401321025) – DAX мерки за Power BI
+// Създайте ги в таблица FactSales / FactBids / FactFeedback / FactListings
+// (Home -> New measure) и копирайте всяка мярка поотделно.
+// =====================================================================
+
+// ---------- Продажби (FactSales) ----------
+Revenue =
+CALCULATE ( SUM ( FactSales[SalesAmount] ), DimOrderStatus[IsRevenue] = TRUE () )
+
+Gross Merchandise Value =
+CALCULATE ( SUM ( FactSales[GrossAmount] ), DimOrderStatus[IsRevenue] = TRUE () )
+
+Orders =
+CALCULATE ( DISTINCTCOUNT ( FactSales[OrderID] ), DimOrderStatus[IsRevenue] = TRUE () )
+
+Items Sold =
+CALCULATE ( SUM ( FactSales[Quantity] ), DimOrderStatus[IsRevenue] = TRUE () )
+
+Average Order Value =
+DIVIDE ( [Revenue], [Orders] )
+
+eBay Fees =
+CALCULATE ( SUM ( FactSales[FinalValueFee] ), DimOrderStatus[IsRevenue] = TRUE () )
+
+Return Rate % =
+DIVIDE (
+    CALCULATE ( DISTINCTCOUNT ( FactSales[OrderID] ), DimOrderStatus[StatusName] = "Returned" ),
+    DISTINCTCOUNT ( FactSales[OrderID] )
+)
+
+Avg Delivery Days =
+AVERAGE ( FactSales[DeliveryDays] )
+
+// Оборот по продавач – използва неактивната връзка FactSales[SellerKey] -> DimUser[UserKey]
+Seller Revenue =
+CALCULATE ( [Revenue], USERELATIONSHIP ( FactSales[SellerKey], DimUser[UserKey] ) )
+
+Revenue PY =
+CALCULATE ( [Revenue], SAMEPERIODLASTYEAR ( DimDate[FullDate] ) )
+
+Revenue YoY % =
+DIVIDE ( [Revenue] - [Revenue PY], [Revenue PY] )
+
+// ---------- Наддавания (FactBids) ----------
+Bids =
+COUNTROWS ( FactBids )
+
+Auctions With Bids =
+DISTINCTCOUNT ( FactBids[ListingKey] )
+
+Avg Bids per Auction =
+DIVIDE ( [Bids], [Auctions With Bids] )
+
+Avg Bid Amount =
+AVERAGE ( FactBids[BidAmount] )
+
+Last Hour Bids % =
+DIVIDE ( CALCULATE ( [Bids], FactBids[HoursBeforeEnd] <= 1 ), [Bids] )
+
+// ---------- Оценки (FactFeedback) ----------
+Feedback Count =
+COUNTROWS ( FactFeedback )
+
+Positive Feedback % =
+VAR pos = CALCULATE ( COUNTROWS ( FactFeedback ), FactFeedback[Rating] = 1 )
+VAR neg = CALCULATE ( COUNTROWS ( FactFeedback ), FactFeedback[Rating] = -1 )
+RETURN DIVIDE ( pos, pos + neg )
+
+Negative Feedback =
+CALCULATE ( COUNTROWS ( FactFeedback ), FactFeedback[Rating] = -1 )
+
+// ---------- Обяви (FactListings) ----------
+Listings =
+COUNTROWS ( FactListings )
+
+Sell-Through Rate % =
+DIVIDE ( SUM ( FactListings[QuantitySold] ), SUM ( FactListings[QuantityListed] ) )
+
+Avg Watchers per Listing =
+AVERAGE ( FactListings[WatchCount] )
+
+Auction Price Multiplier =
+AVERAGEX (
+    FILTER (
+        FactListings,
+        RELATED ( DimListing[ListingFormat] ) = "Auction" && FactListings[IsSold] = TRUE ()
+    ),
+    DIVIDE ( FactListings[FinalPrice], FactListings[StartPrice] )
+)
