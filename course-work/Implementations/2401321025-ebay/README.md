@@ -73,13 +73,10 @@
 │   ├── 01_create_dw.sql           # база eBayDW – факти и измерения
 │   └── 02_etl_load.sql            # ETL процедура sp_LoadDW + първоначално зареждане
 ├── diagrams/                      # .drawio + .png
-├── powerbi/
-│   ├── POWERBI_GUIDE.md           # модел, връзки, визуализации, контролни стойности
-│   ├── measures.dax               # DAX мерки
-│   └── eBay_Report.pbix           # Power BI отчет
-└── tools/
-    ├── generate_seed.py           # генератор на тестовите данни
-    └── gen_*.py, diagram_lib.py   # генератори на диаграмите
+└── powerbi/
+    ├── POWERBI_GUIDE.md           # модел, връзки, визуализации, контролни стойности
+    ├── measures.dax               # DAX мерки
+    └── eBay_Report.pbix           # Power BI отчет
 ```
 
 ## Инсталация и стартиране
@@ -88,7 +85,7 @@
 * Microsoft SQL Server 2019 или по-нов (Developer / Express edition);
 * SQL Server Management Studio (SSMS) или Azure Data Studio;
 * Power BI Desktop (за отчета);
-* *(по желание)* Python 3.10+ – само ако искате да генерирате данните или диаграмите наново.
+* draw.io (app.diagrams.net) – за отваряне на диаграмите.
 
 ### Стъпки (SSMS)
 
@@ -123,15 +120,6 @@ sqlcmd -S localhost -E -i datawarehouse\02_etl_load.sql
 ако е различен от `localhost` → **Refresh**. Пълните инструкции за изграждане на отчета от нулата са в
 [`powerbi/POWERBI_GUIDE.md`](powerbi/POWERBI_GUIDE.md).
 
-### Повторно генериране на данните / диаграмите (по желание)
-```bash
-cd tools
-python generate_seed.py      # -> database/03_seed_data.sql
-python gen_chen.py           # -> diagrams/01_conceptual_chen.drawio
-python gen_crowsfoot.py      # -> diagrams/02_logical_crowsfoot.drawio
-python gen_dw_uml.py         # -> diagrams/03_datawarehouse_uml.drawio
-```
-
 ## Примери за използване
 
 ```sql
@@ -157,7 +145,7 @@ EXEC dbo.sp_CloseEndedAuctions;
 * 4 функции, 6 процедури, 5 тригера (изискване: по 1), плюс 3 изгледа и индекси.
 * Бизнес правила в базата: стъпки за наддаване като в eBay, забрана продавач да наддава по своя обява,
   автоматична текуща цена, оценъчен рейтинг, *soft delete* на обяви с история.
-* Реалистични и консистентни тестови данни (възпроизводим генератор на Python).
+* Реалистични и консистентни тестови данни (поръчки, плащания, доставки и оценки, които си съответстват).
 * DW с 4 факта и 8 измерения (изискване: 3 / 6), role-playing измерения, ETL процедура с дневник.
-* Power BI отчет с 11 визуализации на 2 страници и 25 DAX мерки (изискване: 3 визуализации).
+* Power BI отчет с 11 визуализации на 2 страници и 23 DAX мерки (изискване: 3 визуализации).
 * Диаграмите са в редактируем формат `.drawio` и като PNG.
